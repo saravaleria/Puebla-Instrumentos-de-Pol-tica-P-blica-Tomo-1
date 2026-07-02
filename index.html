@@ -1,0 +1,24 @@
+---
+layout: default
+title: Índice de Páginas
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Páginas</title>
+</head>
+<body>
+<h1>Lista de Páginas</h1>
+<ul>
+        {% for page in site.pages %}
+            {% if page.url contains '.html' and page.url != '/index.html' %}
+<li>
+<a href="{{ page.url | relative_url }}">{{ page.title | default: page.name }}</a>
+</li>
+            {% endif %}
+        {% endfor %}
+</ul>
+</body>
+</html>
