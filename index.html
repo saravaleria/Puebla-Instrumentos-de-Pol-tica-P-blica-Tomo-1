@@ -1,24 +1,53 @@
 ---
-layout: default
-title: Índice de Páginas
+
+title: Inicio
+
 ---
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mis Páginas</title>
+<title>Índice de mis páginas</title>
+<style>
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+
+        h1 { color: #24292e; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
+
+        ul { list-style: none; padding: 0; }
+
+        li { margin: 12px 0; padding: 10px; border: 1px solid #e1e4e8; border-radius: 6px; }
+
+        li:hover { background-color: #f6f8fa; }
+
+        a { color: #0366d6; text-decoration: none; font-weight: bold; display: block; }
+
+        a:hover { color: #024288; }
+</style>
 </head>
 <body>
-<h1>Lista de Páginas</h1>
+ 
+    <h1>Mis Páginas Disponibles</h1>
 <ul>
+
         {% for page in site.pages %}
-            {% if page.url contains '.html' and page.url != '/index.html' %}
+<!-- Filtra para mostrar solo archivos .html de la raíz y descartar el propio index o archivos ocultos -->
+
+            {% if page.url contains '.html' and page.url != '/index.html' and page.url != '/404.html' %}
 <li>
-<a href="{{ page.url | relative_url }}">{{ page.title | default: page.name }}</a>
+<a href="{{ page.url | relative_url }}">
+
+                        {{ page.name | remove: ".html" | replace: "-", " " | replace: "_", " " | capitalize }}
+</a>
 </li>
+
             {% endif %}
+
         {% endfor %}
 </ul>
+ 
 </body>
 </html>
+
+ 
