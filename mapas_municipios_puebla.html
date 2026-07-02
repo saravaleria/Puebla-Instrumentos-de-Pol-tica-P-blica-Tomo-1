@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapas Económicos — Tres Municipios de Puebla</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F0EEF5;font-size:14px;}
+header{background:linear-gradient(135deg,#4A1572 0%,#7B1FA2 100%);color:white;padding:16px 24px;text-align:center;}
+header h1{font-size:17px;font-weight:700;}
+header p{font-size:12px;opacity:.72;margin-top:3px;}
+.tabs-wrap{background:white;box-shadow:0 2px 6px rgba(0,0,0,.09);position:sticky;top:0;z-index:100;}
+.tabs{display:flex;overflow-x:auto;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{padding:10px 16px;border:none;background:none;font-size:11px;font-weight:600;color:#718096;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.18s;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.tab-btn .ts{font-size:13px;font-weight:800;}
+.tab-btn .tt{font-size:10px;color:#A0AEC0;}
+.tab-btn.active{color:var(--c);border-bottom-color:var(--c);}
+.tab-btn:hover:not(.active){color:var(--c);background:#F7FAFC;}
+.content{padding:16px;max-width:960px;margin:0 auto;}
+.sec{display:none;}
+.sec.active{display:block;}
+.map-card{background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.09);overflow:hidden;}
+.card-hdr{background:var(--c);color:white;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.card-hdr h2{font-size:14px;font-weight:700;}
+.badge{background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.map-area{position:relative;width:100%;height:490px;background:linear-gradient(145deg,#f8f6fc 0%,#ede9f5 100%);overflow:hidden;}
+.map-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.node{position:absolute;border-radius:10px;cursor:pointer;transition:transform .2s,box-shadow .2s;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;border:2px solid transparent;user-select:none;}
+.node:hover,.node.sel{transform:scale(1.07) translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.22)!important;z-index:20;}
+.node.sel{border-color:rgba(255,255,255,.6);}
+.node.central{border-radius:50%;}
+.ni{font-size:18px;margin-bottom:3px;}
+.nt{font-size:10.5px;font-weight:700;line-height:1.25;color:white;}
+.ns{font-size:9px;opacity:.82;margin-top:2px;line-height:1.25;color:white;}
+.det-panel{padding:14px 20px;min-height:90px;border-top:1px solid #E2D9F3;background:white;display:flex;align-items:flex-start;gap:14px;}
+.det-icon{font-size:26px;flex-shrink:0;margin-top:1px;}
+.det-body h4{font-size:13px;font-weight:700;color:var(--c);margin-bottom:4px;}
+.det-body p{font-size:12px;color:#4A5568;line-height:1.65;}
+.hint{font-size:10.5px;color:#A0AEC0;text-align:center;padding:7px 20px 10px;border-top:1px solid #EDF2F7;}
+.comp-sec{display:flex;flex-direction:column;gap:16px;}
+.comp-block{background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.09);overflow:hidden;}
+.comp-hdr{background:linear-gradient(135deg,#4A1572 0%,#7B1FA2 100%);color:white;padding:12px 20px;}
+.comp-hdr h2{font-size:14px;font-weight:700;}
+.comp-hdr p{font-size:11px;opacity:.75;margin-top:3px;}
+.radar-wrap{padding:20px;display:flex;justify-content:center;}
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;}
+.muni-card{border-radius:10px;overflow:hidden;border:1px solid #E2E8F0;}
+.mc-head{padding:10px 14px;color:white;display:flex;align-items:center;gap:10px;}
+.mc-ico{font-size:22px;}
+.mc-head h3{font-size:13px;font-weight:700;margin-bottom:1px;}
+.mc-tipo{font-size:10px;opacity:.85;}
+.mc-body{padding:10px 14px;}
+.mc-row{display:flex;flex-direction:column;padding:5px 0;border-bottom:.5px solid #EDF2F7;}
+.mc-row:last-child{border-bottom:none;}
+.mc-lbl{font-size:9.5px;color:#A0AEC0;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.mc-val{font-size:11.5px;color:#2D3748;line-height:1.4;}
+.mc-row.hl .mc-val{font-weight:700;color:var(--c);}
+.conv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
+.conv-item{background:#F8F6FC;border-radius:8px;padding:12px 14px;border-left:4px solid var(--lc);}
+.conv-item h4{font-size:12px;font-weight:700;color:var(--lc);margin-bottom:5px;}
+.conv-item p{font-size:11.5px;color:#4A5568;line-height:1.6;}
+@media(max-width:700px){.cards-grid{grid-template-columns:1fr;}.conv-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ Mapas Económicos — Huejotzingo · Cholula · Calpan</h1>
+  <p>Estado de Puebla · PMD 2024–2027 · Panorama económico y marco estratégico · Haz clic en cada nodo para explorar</p>
+</header>
+<div class="tabs-wrap"><div class="tabs" id="tabs"></div></div>
+<div class="content" id="main"></div>
+<script>
+const M=[
+  {
+    id:'hue',name:'Huejotzingo',sub:'Centro Industrial · Corredor Automotriz',color:'#0D47A1',icon:'🏭',
+    nodes:[
+      {id:'c',lbl:'Huejotzingo\nPuebla',sub:'Industria · Turismo · Campo',icon:'🏭',cx:true,x:450,y:248,
+       det:'Municipio en plena transformación industrial. Su ubicación estratégica —cerca del Aeropuerto Internacional de Puebla y del corredor VW-Audi— lo posiciona como uno de los nodos manufactureros más importantes del estado. Conserva además una identidad agrícola artesanal y turística como Pueblo Mágico.'},
+      {id:'ind',lbl:'Sector\nIndustrial',sub:'5 parques · Automotriz · Textil',icon:'🏗️',x:450,y:62,
+       det:'5 parques industriales incluyendo Ciudad Textil (manufactura, logística, distribución). Proveedores de VW y Audi en la cadena automotriz. Industria textil, alimentaria (Big Cola) y de autopartes. Principal motor de crecimiento económico del municipio. Localización privilegiada junto al Aeropuerto Internacional de Puebla.'},
+      {id:'tur',lbl:'Turismo\ny Cultura',sub:'Pueblo Mágico · Carnaval',icon:'🎭',x:693,y:108,
+       det:'Pueblo Mágico con atractivos como el Ex Convento de San Miguel Arcángel. El Carnaval de Huejotzingo genera importante derrama económica anual. La Feria de las Carnitas atrae miles de visitantes. La producción artesanal de sidra posiciona al municipio como uno de los principales productores nacionales, especialmente en temporada navideña.'},
+      {id:'dem',lbl:'Demografía\ny Educación',sub:'Jóvenes · 8.7 años esc. · 3 univ.',icon:'👥',x:792,y:248,
+       det:'Población predominantemente joven (grupos más numerosos: 5-14 años). Promedio de escolaridad: 8.7 años. Solo 3 instituciones de educación superior: presión migratoria para estudios. En 2021-2022: 2,298 estudiantes en capacitación técnica. Alta demanda futura de empleo en los próximos años.'},
+      {id:'pmd',lbl:'PMD 2024–27',sub:'Eje 2 y Eje 3',icon:'📋',x:693,y:405,
+       det:'Plan Municipal 2024-2027. Eje 2 (Desarrollo Económico): capacitación para parques industriales, creación de Consejo Empresarial con representantes de parques, ferias de trabajo. Eje 3 (Bienestar): becas para nivel medio superior y superior para permanencia educativa e inserción laboral. Enfoque en talento local.'},
+      {id:'ins',lbl:'Inserción\nLaboral',sub:'JCF · Ferias · SNE Puebla',icon:'🔗',x:450,y:440,
+       det:'Jóvenes Construyendo el Futuro (18-29 años): capacitación en centros de trabajo + beca mensual + seguro médico. Ferias Nacionales de Empleo para las Juventudes. SNE Puebla: difusión de vacantes. Sectores demandantes: manufactura, autopartes, perfiles operativos, técnicos y administrativos de nivel inicial.'},
+      {id:'cam',lbl:'Apoyo\nal Campo',sub:'Insumos · Tecnif. · Créditos',icon:'🌾',x:210,y:405,
+       det:'Paquete de fortalecimiento al sector primario: entrega de fertilizantes (orgánicos o químicos) coordinada con estado y federación. Programa de tecnificación: sistemas de riego y agricultura de precisión. Microcréditos productivos para agronegocios liderados por jóvenes. Objetivo: convertir el campo en una empresa rentable.'},
+      {id:'emp',lbl:'Emprendimiento\ne Inclusión',sub:'Mujeres · Migrantes · Indígenas',icon:'👩‍💼',x:108,y:248,
+       det:'753 unidades económicas dirigidas por mujeres. Programas inclusivos para migrantes, indígenas y afrodescendientes. Talleres formativos para adolescentes y adultos mayores. Equidad de género en acceso a recursos. Consejo Empresarial para vinculación público-privada y colocación de trabajadores locales.'},
+      {id:'vin',lbl:'Vinculación\nLaboral',sub:'Consejo Empresarial · Becas',icon:'🤝',x:210,y:108,
+       det:'Creación de Consejo Empresarial con representantes de los 5 parques industriales para mejorar la colocación laboral. Becas para educación media superior y superior. Capacitaciones técnicas especializadas alineadas a las necesidades de los parques. Objetivo: retener talento local y evitar migración por falta de oportunidades.'},
+    ],
+    conns:[['c','ind'],['c','tur'],['c','dem'],['c','pmd'],['c','ins'],['c','cam'],['c','emp'],['c','vin']]
+  },
+  {
+    id:'cho',name:'Cholula',sub:'Turismo · Servicios · Universidad',color:'#880E4F',icon:'🏯',
+    nodes:[
+      {id:'c',lbl:'Cholula\nPuebla',sub:'San Pedro · San Andrés · UDLAP',icon:'🏯',cx:true,x:450,y:248,
+       det:'Cholula (San Pedro + San Andrés) combina un patrimonio histórico excepcional con un dinamismo económico impulsado por el turismo, los servicios universitarios y el comercio. Como Pueblo Mágico y sede de la UDLAP, es el segundo mayor generador de empleo formal en Puebla, con una derrama turística de $600-615M pesos en 2025.'},
+      {id:'tur',lbl:'Turismo\nCultural',sub:'Pueblo Mágico · $600-615M',icon:'🏯',x:450,y:62,
+       det:'Pueblo Mágico con derrama económica de $600-615M pesos en 2025 (+15% vs. año anterior). Ocupación hotelera: 52%. Más de 475,000 personas beneficiadas directa o indirectamente. Gran Pirámide, Capilla de la Virgen, Tonantzintla. Motor principal de la reactivación post-pandemia. Segundo destino turístico más visitado de Puebla.'},
+      {id:'edu',lbl:'Servicios\nEducativos',sub:'UDLAP · Economía universitaria',icon:'🎓',x:693,y:108,
+       det:'UDLAP (Universidad de las Américas Puebla) genera demanda constante de servicios durante todo el año: vivienda, alimentación, transporte y entretenimiento. Crecimiento de startups y agencias digitales vinculadas al entorno universitario. Sector inmobiliario en expansión por demanda estudiantil. Hub de innovación emergente.'},
+      {id:'emp',lbl:'Empleo\nFormal',sub:'2do generador Puebla · $315/día',icon:'💼',x:792,y:248,
+       det:'San Andrés Cholula: segundo mayor generador de empleo formal en Puebla, solo detrás de la capital. Salario 2025: $278.80/día; proyección 2026: $315.04/día (~$9,451/mes). Compras internacionales 2025: $23.1M USD. Ferias de empleo con perspectiva de género. Sectores: servicios, comercio, manufactura alimentaria.'},
+      {id:'des',lbl:'Desafíos',sub:'62% informalidad · Subocupación',icon:'⚠️',x:693,y:405,
+       det:'62% de la economía en informalidad (municipal); 72% informalidad laboral estatal. 65% de empleos turísticos son temporales; solo 18% con capacitación formal reciente. Subocupación profesional: jóvenes universitarios en empleos de servicios básicos donde las propinas superan salarios profesionales iniciales.'},
+      {id:'pmd',lbl:'PMD 2024–27',sub:'Eje 2: San Pedro más Próspero',icon:'📋',x:450,y:440,
+       det:'Eje 2 "San Pedro más Próspero": impulso al emprendimiento, creación de empleo digno, capacitación productiva. 5 programas: Impulso Económico y Turismo Local, Bienestar Social Integral, Igualdad Sustantiva, Apoyo Educativo-Tecnológico, Políticas para Grupos Vulnerables. Juventud y mujeres = 47% PEA vulnerable identificada.'},
+      {id:'jov',lbl:'Empleo\nJuvenil',sub:'$7,500-10,500 · Container City',icon:'🚀',x:210,y:405,
+       det:'Empleo en restaurantes, cafeterías y retail (Container City, zonas universitarias, desarrollos residenciales). Salarios: $7,500-10,500/mes. Alta disponibilidad de empleos de medio tiempo compatibles con estudios. Sectores emergentes: tecnología y startups, sector inmobiliario. JCF activo en la región.'},
+      {id:'com',lbl:'Comercio\ny Gastronomía',sub:'Retail · Hospedaje · Servicios',icon:'🏪',x:108,y:248,
+       det:'Mayor número de unidades económicas locales. Gastronomía como eje central del empleo: restaurantes y cafeterías en expansión. Hoteles y hospedaje con crecimiento sostenido desde la declaratoria Pueblo Mágico. Comercio al por menor dinámico con integración a mercados internacionales ($23.1M USD en 2025).'},
+      {id:'art',lbl:'Artesanías\ne Industria',sub:'Sidra · Talavera · Ladrillo',icon:'🏺',x:210,y:108,
+       det:'San Pedro Cholula: producción de sidra, pirotecnia, alfarería, popotillo y talavera. San Cosme Tezintla: producción de ladrillo vinculada al crecimiento urbano regional. Artesanías refuerzan la identidad cultural y complementan la oferta turística. Sector secundario con presencia relevante aunque menor al terciario.'},
+    ],
+    conns:[['c','tur'],['c','edu'],['c','emp'],['c','des'],['c','pmd'],['c','jov'],['c','com'],['c','art']]
+  },
+  {
+    id:'cal',name:'Calpan',sub:'Agricultura · Chile en Nogada · Tradición',color:'#33691E',icon:'🌰',
+    nodes:[
+      {id:'c',lbl:'Calpan\nPuebla',sub:'Fruticultura · Gastronomía · Campo',icon:'🌰',cx:true,x:450,y:248,
+       det:'Municipio de ~14,000 habitantes cuya economía se sostiene en tres pilares: agricultura frutícola, comercio minorista y turismo gastronómico. Reconocido como "Cuna del Chile en Nogada", enfrenta una transición gradual desde la subsistencia agrícola hacia servicios y empleo regional. El 55%+ de la PEA trabaja en el sector primario.'},
+      {id:'fru',lbl:'Fruticultura',sub:'Cuna del Chile en Nogada',icon:'🌰',x:450,y:62,
+       det:'Reconocida como "Cuna del Chile en Nogada". Producción de nuez de Castilla, durazno criollo, manzana panochera, pera lechera y tejocote —referente estatal y nacional. La temporada del chile en nogada (julio-agosto) genera importante derrama económica beneficiando cocineras tradicionales, restaurantes y mercados locales.'},
+      {id:'cul',lbl:'Cultivos\nBásicos',sub:'Maíz · Frijol · Haba · Ganadería',icon:'🌽',x:693,y:108,
+       det:'Maíz de temporal como principal cultivo para seguridad alimentaria. Frijol, haba y calabaza como complemento. Ganadería de traspatio: aves, cerdos y ganado menor para autoconsumo y venta local. Agricultura de carácter familiar y tradicional. 55%+ de la PEA en este sector. Base de la subsistencia comunitaria.'},
+      {id:'ter',lbl:'Sector\nTerciario',sub:'~200 establec. · Turismo gastron.',icon:'🏪',x:792,y:248,
+       det:'~200 establecimientos de comercio minorista (principalmente abarrotes y productos básicos). Turismo gastronómico en temporada alta: temporada del chile en nogada beneficia directamente a productoras, restaurantes y mercados. Sector en crecimiento como complemento y diversificación a la economía agrícola tradicional.'},
+      {id:'des',lbl:'Desafíos\nLaborales',sub:'$4,500-6,000/mes · Informalidad',icon:'⚠️',x:693,y:405,
+       det:'Ingresos iniciales: $4,500-6,000 MXN mensuales. Alta informalidad: gran parte del empleo sin prestaciones ni seguridad social. PEA 62.4%, pero solo 45.9% ocupada. Escasas oportunidades para egresados universitarios en el municipio. Jornadas extensas con bajas remuneraciones. Desconexión juvenil con la agricultura tradicional.'},
+      {id:'pmd',lbl:'PMD 2024–27',sub:'Ejes 4 y 5 · Certificación',icon:'📋',x:450,y:440,
+       det:'Ejes 4 y 5: integración de jóvenes en actividades productivas y comunitarias. Capacitación técnica con certificación de competencias como diferenciador para movilidad laboral. Inserción en administración pública municipal como primer empleo formal. Educación dual: convenios con empresas para prácticas. Inclusión productiva para grupos vulnerables.'},
+      {id:'jov',lbl:'Empleo\nJuvenil',sub:'Migración · Industria regional',icon:'🚶',x:210,y:405,
+       det:'Migración diaria hacia Huejotzingo, Cholula y Puebla capital. Empleo en corredores industriales cercanos. Desconexión juvenil con agricultura tradicional. Falta de relevo generacional en nuez y tejocote. Oportunidades emergentes: turismo gastronómico, emprendimiento innovador vinculado al Chile en Nogada y agronegocios tecnificados.'},
+      {id:'emp',lbl:'Emprendimiento\nLocal',sub:'MiPyMEs · Chile en Nogada · Coop.',icon:'🍽️',x:108,y:248,
+       det:'Fomento a MiPyMEs y transformación de productos agrícolas. Asesoría para cooperativas productivas. Chile en Nogada como eje del emprendimiento gastronómico. Agronegocios liderados por jóvenes con microcréditos. Educación dual: convenios con empresas para prácticas profesionales y esquemas de aprendizaje en el trabajo.'},
+      {id:'ins',lbl:'Institucional',sub:'Regiduría Juventud · Dir. Bienestar',icon:'🏛️',x:210,y:108,
+       det:'Dirección de Educación, Deporte, Cultura y Equidad de Género. Regiduría de Juventud y Grupos Vulnerables. Dirección de Bienestar y Gestión Social. Atención prioritaria a jóvenes 9-19 años vulnerables: adicciones, salud mental, violencia, embarazos no deseados. Políticas transversales de inclusión social.'},
+    ],
+    conns:[['c','fru'],['c','cul'],['c','ter'],['c','des'],['c','pmd'],['c','jov'],['c','emp'],['c','ins']]
+  }
+];
+
+const COMP={
+  radar:{
+    labels:[['Diversificación','económica'],['Empleo','formal'],['Turismo'],['Atención','juventud'],['Infraest.\nproductiva'],['Educación /','capacitación']],
+    ds:[
+      {lbl:'Huejotzingo',data:[7,8,6,7,9,6],color:'#0D47A1'},
+      {lbl:'Cholula',data:[8,8,9,7,6,7],color:'#880E4F'},
+      {lbl:'Calpan',data:[3,3,5,6,3,5],color:'#33691E'}
+    ]
+  },
+  cards:[
+    {mun:'Huejotzingo',color:'#0D47A1',icon:'🏭',tipo:'Industrial / Manufacturero',rows:[
+      {l:'Población',v:'~120,000 habitantes'},
+      {l:'Sector líder',v:'Secundario — Manufactura e industria',hl:true},
+      {l:'Motor económico',v:'5 parques industriales + cadena VW/Audi'},
+      {l:'Reto principal',v:'Rezago educativo y brecha técnica-industrial'},
+      {l:'PMD clave',v:'Consejo Empresarial + Becas + JCF'},
+      {l:'Rezago social',v:'Bajo-Medio'},
+      {l:'Fortaleza',v:'Corredor industrial + Pueblo Mágico',hl:true}
+    ]},
+    {mun:'Cholula',color:'#880E4F',icon:'🏯',tipo:'Servicios / Turístico / Universitario',rows:[
+      {l:'Población',v:'~200,000 hab. (San Pedro + San Andrés)'},
+      {l:'Sector líder',v:'Terciario — Turismo + Servicios educativos',hl:true},
+      {l:'Motor económico',v:'UDLAP + Pueblo Mágico + $600-615M turismo'},
+      {l:'Reto principal',v:'62-72% informalidad laboral'},
+      {l:'PMD clave',v:'Eje 2 Prosperidad + Igualdad Sustantiva'},
+      {l:'Rezago social',v:'Bajo'},
+      {l:'Fortaleza',v:'2do empleador Puebla + Hub universitario',hl:true}
+    ]},
+    {mun:'Calpan',color:'#33691E',icon:'🌰',tipo:'Agrícola / Gastronómico',rows:[
+      {l:'Población',v:'~14,000 habitantes'},
+      {l:'Sector líder',v:'Primario — Fruticultura + Chile en Nogada',hl:true},
+      {l:'Motor económico',v:'Tejocote + nuez + temporada gastronómica'},
+      {l:'Reto principal',v:'Informalidad alta + migración juvenil'},
+      {l:'PMD clave',v:'Ejes 4-5 + Certificación + Cooperativas'},
+      {l:'Rezago social',v:'Medio-Alto'},
+      {l:'Fortaleza',v:'"Cuna del Chile en Nogada" + tejocote',hl:true}
+    ]}
+  ],
+  conv:[
+    {title:'Juventud como eje estratégico compartido',color:'#4A1572',
+     text:'Los tres PMDs 2024-2027 priorizan la inserción laboral juvenil con enfoques diferenciados: Huejotzingo conecta jóvenes con parques industriales mediante capacitación técnica y un Consejo Empresarial; Cholula apuesta por turismo y servicios universitarios; Calpan busca retener talento local en la agricultura tecnificada y el emprendimiento gastronómico.'},
+    {title:'Brecha educativa y técnica como denominador común',color:'#0D47A1',
+     text:'Los tres municipios enfrentan desconexión entre oferta educativa y demanda laboral. Huejotzingo tiene solo 3 instituciones superiores; Cholula depende de la UDLAP como motor externo; Calpan carece de formación técnica para agronegocios. La capacitación técnica certificada aparece en los tres PMDs como respuesta central a esta brecha.'},
+    {title:'Informalidad: reto estructural diferenciado',color:'#880E4F',
+     text:'Cholula registra 62% de informalidad municipal (72% estatal); Calpan opera con alta informalidad agrícola y laboral; Huejotzingo busca formalizar mediante parques industriales y vinculación con el sector privado. Los tres planes reconocen la transición hacia empleo formal como objetivo, pero con instrumentos y sectores distintos.'},
+    {title:'Tres vocaciones productivas complementarias',color:'#33691E',
+     text:'Huejotzingo (corredor automotriz e industrial), Cholula (servicios universitarios y turismo patrimonio) y Calpan (agricultura frutícola y gastronomía tradicional) representan vocaciones complementarias dentro del mismo estado. Una política regional articulada podría convertir esta diversidad en un ecosistema económico robusto que minimice la migración juvenil.'}
+  ]
+};
+
+function hexRgba(h,a){
+  const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+const tabsEl=document.getElementById('tabs');
+const mainEl=document.getElementById('main');
+
+M.forEach((m,i)=>{
+  const btn=document.createElement('button');
+  btn.className='tab-btn'+(i===0?' active':'');
+  btn.style.setProperty('--c',m.color);
+  btn.innerHTML=`<span class="ts">${m.icon} ${m.name}</span><span class="tt">${m.sub.split('·')[0].trim()}</span>`;
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('s-'+m.id).classList.add('active');
+  };
+  tabsEl.appendChild(btn);
+
+  const sec=document.createElement('div');
+  sec.className='sec'+(i===0?' active':'');
+  sec.id='s-'+m.id;
+  sec.style.setProperty('--c',m.color);
+  const cN=m.nodes.find(n=>n.id==='c');
+  sec.innerHTML=`
+    <div class="map-card">
+      <div class="card-hdr">
+        <h2>${m.icon} ${m.name} — Panorama Económico y PMD 2024–2027</h2>
+        <span class="badge">${m.sub}</span>
+      </div>
+      <div class="map-area" id="a-${m.id}">
+        <svg class="map-svg" id="svg-${m.id}" viewBox="0 0 900 490" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="det-panel" id="d-${m.id}">
+        <span class="det-icon">${m.icon}</span>
+        <div class="det-body"><h4>${m.name} — Vista General</h4><p>${cN.det}</p></div>
+      </div>
+      <div class="hint">💡 Haz clic en cada nodo para explorar sus detalles</div>
+    </div>`;
+  mainEl.appendChild(sec);
+
+  const svg=document.getElementById('svg-'+m.id);
+  const area=document.getElementById('a-'+m.id);
+  const det=document.getElementById('d-'+m.id);
+
+  m.conns.forEach(([a,b])=>{
+    const na=m.nodes.find(n=>n.id===a),nb=m.nodes.find(n=>n.id===b);
+    const el=document.createElementNS('http://www.w3.org/2000/svg','line');
+    el.setAttribute('x1',na.x);el.setAttribute('y1',na.y);
+    el.setAttribute('x2',nb.x);el.setAttribute('y2',nb.y);
+    el.setAttribute('stroke',m.color);el.setAttribute('stroke-width','2.5');el.setAttribute('stroke-opacity','0.3');
+    svg.appendChild(el);
+  });
+
+  m.nodes.forEach(n=>{
+    const isCx=n.cx,w=isCx?128:136;
+    const lp=(n.x/900*100),tp=(n.y/490*100);
+    const div=document.createElement('div');
+    div.className='node'+(isCx?' central':'');
+    div.style.cssText=`left:calc(${lp}% - ${w/2}px);top:calc(${tp}% - ${isCx?64:40}px);width:${w}px;${isCx?`height:${w}px;`:''}background:${isCx?m.color:hexRgba(m.color,0.83)};box-shadow:0 4px 14px ${hexRgba(m.color,0.28)};`;
+    div.innerHTML=`<span class="ni">${n.icon}</span><span class="nt">${n.lbl.replace(/\n/g,'<br>')}</span>${n.sub?`<span class="ns">${n.sub}</span>`:''}`;
+    div.onclick=()=>{
+      document.querySelectorAll(`#a-${m.id} .node`).forEach(e=>e.classList.remove('sel'));
+      div.classList.add('sel');
+      det.innerHTML=`<span class="det-icon">${n.icon}</span><div class="det-body"><h4>${n.lbl.replace(/\n/g,' ')}</h4><p>${n.det}</p></div>`;
+    };
+    area.appendChild(div);
+  });
+});
+
+const compBtn=document.createElement('button');
+compBtn.className='tab-btn';
+compBtn.style.setProperty('--c','#6D4C41');
+compBtn.innerHTML=`<span class="ts">📊 Comparativo</span><span class="tt">Tres municipios</span>`;
+let chartMade=false;
+compBtn.onclick=()=>{
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  compBtn.classList.add('active');
+  document.getElementById('s-comp').classList.add('active');
+  if(!chartMade){buildRadar();chartMade=true;}
+};
+tabsEl.appendChild(compBtn);
+
+const compSec=document.createElement('div');
+compSec.className='sec';
+compSec.id='s-comp';
+compSec.innerHTML=`
+  <div class="comp-sec">
+    <div class="comp-block">
+      <div class="comp-hdr">
+        <h2>📡 Análisis Comparativo — Capacidades Económicas</h2>
+        <p>Evaluación relativa en 6 dimensiones · Escala 1–10 basada en análisis cualitativo del PMD 2024-2027 y datos sectoriales</p>
+      </div>
+      <div class="radar-wrap"><canvas id="radarC" width="500" height="360"></canvas></div>
+    </div>
+    <div class="comp-block">
+      <div class="comp-hdr">
+        <h2>📋 Perfiles Municipales — Indicadores Comparativos</h2>
+        <p>Comparación estructural: economía, retos, PMD y fortalezas clave</p>
+      </div>
+      <div class="cards-grid" id="cgrid"></div>
+    </div>
+    <div class="comp-block">
+      <div class="comp-hdr">
+        <h2>🔁 Convergencias y Divergencias en los PMDs</h2>
+        <p>Elementos comunes y diferenciadores en los tres Planes Municipales de Desarrollo 2024–2027</p>
+      </div>
+      <div class="conv-grid" id="cvgrid"></div>
+    </div>
+  </div>`;
+mainEl.appendChild(compSec);
+
+const cg=document.getElementById('cgrid');
+COMP.cards.forEach(c=>{
+  const card=document.createElement('div');
+  card.className='muni-card';
+  card.style.setProperty('--c',c.color);
+  card.innerHTML=`
+    <div class="mc-head" style="background:${c.color}">
+      <span class="mc-ico">${c.icon}</span>
+      <div><h3>${c.mun}</h3><div class="mc-tipo">${c.tipo}</div></div>
+    </div>
+    <div class="mc-body">
+      ${c.rows.map(r=>`<div class="mc-row${r.hl?' hl':''}"><div class="mc-lbl">${r.l}</div><div class="mc-val">${r.v}</div></div>`).join('')}
+    </div>`;
+  cg.appendChild(card);
+});
+
+const cvg=document.getElementById('cvgrid');
+COMP.conv.forEach(cv=>{
+  const d=document.createElement('div');
+  d.className='conv-item';
+  d.style.setProperty('--lc',cv.color);
+  d.innerHTML=`<h4>${cv.title}</h4><p>${cv.text}</p>`;
+  cvg.appendChild(d);
+});
+
+function buildRadar(){
+  const ctx=document.getElementById('radarC').getContext('2d');
+  new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:COMP.radar.labels,
+      datasets:COMP.radar.ds.map(d=>({
+        label:d.lbl,data:d.data,
+        borderColor:d.color,
+        backgroundColor:hexRgba(d.color,0.1),
+        borderWidth:2.5,
+        pointBackgroundColor:d.color,
+        pointRadius:4,pointHoverRadius:6
+      }))
+    },
+    options:{
+      responsive:false,
+      scales:{r:{
+        beginAtZero:true,max:10,
+        ticks:{stepSize:2,font:{size:10},color:'#718096',backdropColor:'transparent'},
+        grid:{color:'rgba(0,0,0,0.07)'},
+        pointLabels:{font:{size:10.5,weight:'600'},color:'#4A5568'},
+        angleLines:{color:'rgba(0,0,0,0.07)'}
+      }},
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:12},padding:16,usePointStyle:true}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}/10`}}
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
