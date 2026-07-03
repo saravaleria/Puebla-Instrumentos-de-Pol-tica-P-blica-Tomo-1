@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapas Conceptuales – Programas Veracruz</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #EEF2F7; min-height: 100vh; font-size: 14px; }
+
+header {
+  background: linear-gradient(135deg, #1B2A4A 0%, #2E4A7A 100%);
+  color: white; padding: 16px 24px; text-align: center;
+}
+header h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
+header p { font-size: 12px; opacity: 0.7; margin-top: 3px; }
+
+.tabs-wrap { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.09); position: sticky; top: 0; z-index: 100; }
+.tabs { display: flex; overflow-x: auto; padding: 0 12px; gap: 2px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 10px 16px; border: none; background: none;
+  font-size: 11px; font-weight: 600; color: #718096; cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -1px;
+  white-space: nowrap; transition: 0.18s; display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.tab-btn .tshort { font-size: 13px; font-weight: 800; }
+.tab-btn.active { color: var(--c); border-bottom-color: var(--c); }
+.tab-btn:hover:not(.active) { color: var(--c); background: #F7FAFC; }
+
+.content { padding: 16px; max-width: 960px; margin: 0 auto; }
+.prog-sec { display: none; }
+.prog-sec.active { display: block; }
+
+.map-card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.09); overflow: hidden; }
+.card-header {
+  background: var(--c); color: white;
+  padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.card-header h2 { font-size: 15px; font-weight: 700; }
+.badge { background: rgba(255,255,255,0.22); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+
+.map-area {
+  position: relative; width: 100%; height: 480px;
+  background: linear-gradient(145deg, #f8fafc 0%, #edf2f7 100%); overflow: hidden;
+}
+.map-svg { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+
+.node {
+  position: absolute; border-radius: 10px; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 8px 10px;
+  border: 2px solid transparent; user-select: none;
+}
+.node:hover { transform: scale(1.07) translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.22) !important; z-index: 20; }
+.node.sel { transform: scale(1.07) translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.22) !important; z-index: 20; border-color: rgba(255,255,255,0.6); }
+.node.central { border-radius: 50%; }
+.ni { font-size: 18px; margin-bottom: 3px; }
+.nt { font-size: 10.5px; font-weight: 700; line-height: 1.25; color: white; }
+.ns { font-size: 9px; opacity: 0.82; margin-top: 2px; line-height: 1.25; color: white; }
+
+.det-panel {
+  padding: 14px 20px; min-height: 88px; border-top: 1px solid #E2E8F0;
+  background: white; display: flex; align-items: flex-start; gap: 14px;
+}
+.det-icon { font-size: 26px; flex-shrink: 0; margin-top: 1px; }
+.det-body h4 { font-size: 13px; font-weight: 700; color: var(--c); margin-bottom: 4px; }
+.det-body p { font-size: 12px; color: #4A5568; line-height: 1.65; }
+.hint { font-size: 10.5px; color: #A0AEC0; text-align: center; padding: 7px 20px 10px; border-top: 1px solid #EDF2F7; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ Mapas Conceptuales — Instrumentos de Política Pública</h1>
+  <p>Estado de Veracruz · 2025–2026 · Haz clic en cada nodo para explorar su contenido</p>
+</header>
+<div class="tabs-wrap"><div class="tabs" id="tabs"></div></div>
+<div class="content" id="main"></div>
+
+<script>
+const P = [
+  {
+    id:'jcf', name:'Jóvenes Construyendo el Futuro', short:'JCF', type:'Programa Federal', color:'#1565C0', icon:'🎯',
+    nodes:[
+      { id:'c', lbl:'Jóvenes\nConstruyendo\nel Futuro', sub:'Programa Federal', icon:'🏛️', cx:true, x:450,y:245,
+        det:'Programa federal implementado en Veracruz para impulsar la inclusión laboral juvenil. Veracruz concentra el 11.9% del total nacional de beneficiarios, posicionándola entre los primeros lugares del país.' },
+      { id:'obj', lbl:'Objetivo', sub:'Inclusión laboral juvenil', icon:'🎯', x:450,y:72,
+        det:'Ofrecer capacitación en centros de trabajo a jóvenes de 18 a 29 años que no estudian ni trabajan, facilitando su inserción al mercado laboral formal mediante un apoyo económico mensual de hasta 12 meses.' },
+      { id:'pob', lbl:'Población\nObjetivo', sub:'18–29 años · 16,562', icon:'👥', x:685,y:110,
+        det:'Jóvenes de 18 a 29 años que no estudian ni trabajan. En 2025, Veracruz registró 16,562 beneficiarios, concentrando el 11.9% del total nacional del programa.' },
+      { id:'ben', lbl:'Beneficios', sub:'Apoyo + IMSS + Capac.', icon:'💼', x:785,y:255,
+        det:'• Apoyo económico mensual durante hasta 12 meses\n• Cobertura médica IMSS: enfermedades, maternidad, riesgos de trabajo\n• Capacitación práctica en centros de trabajo' },
+      { id:'res', lbl:'Resultados', sub:'7 de 10 se insertan', icon:'📊', x:680,y:408,
+        det:'7 de cada 10 jóvenes logran incorporarse a un empleo formal o actividad productiva al concluir su periodo de capacitación, incrementando significativamente sus oportunidades laborales.' },
+      { id:'inv', lbl:'Inversión\n2025', sub:'481 M pesos', icon:'💰', x:450,y:432,
+        det:'En 2025 se destinaron aproximadamente 481 millones de pesos en Veracruz, beneficiando a 16,562 jóvenes (dato reportado en julio de ese año).' },
+      { id:'eme', lbl:'Acción\nEmergente', sub:'Poza Rica · Álamo', icon:'🚨', x:198,y:408,
+        det:'Tras las lluvias de octubre 2025, se implementó un registro especial en la zona norte. Los participantes colaboran en limpieza, rehabilitación de espacios y apoyo comunitario post-desastre en Poza Rica y Álamo.' },
+      { id:'ope', lbl:'Alcance\nNacional', sub:'11.9% del país', icon:'🗺️', x:105,y:255,
+        det:'Veracruz se posiciona entre los primeros lugares a nivel nacional, concentrando el 11.9% del total de beneficiarios del programa JCF en todo el país.' },
+      { id:'req', lbl:'Perfil\nBeneficiario', sub:'Sin estudiar ni trabajar', icon:'📋', x:198,y:110,
+        det:'Jóvenes de 18 a 29 años residentes en Veracruz que actualmente no estudian ni trabajan, dispuestos a capacitarse en un centro de trabajo por hasta 12 meses.' }
+    ],
+    conns:[['c','obj'],['c','pob'],['c','ben'],['c','res'],['c','inv'],['c','eme'],['c','ope'],['c','req']]
+  },
+  {
+    id:'pae', name:'Programa de Apoyo al Empleo', short:'PAE', type:'Estatal · STPSP', color:'#2E7D32', icon:'💼',
+    nodes:[
+      { id:'c', lbl:'Programa de\nApoyo al\nEmpleo', sub:'STPSP · SNE Veracruz', icon:'💼', cx:true, x:450,y:245,
+        det:'Programa estatal de la STPSP, operado a través del SNE Veracruz. Facilita la inserción laboral y fortalece habilidades de personas desempleadas o subempleadas, vinculándolas con el sector productivo formal.' },
+      { id:'obj', lbl:'Objetivo', sub:'Inserción laboral formal', icon:'🎯', x:450,y:72,
+        det:'Facilitar la inserción laboral de personas desempleadas o subempleadas, fortalecer sus habilidades y vincularlas con el sector productivo formal a través de capacitación y bolsa de trabajo.' },
+      { id:'pob', lbl:'Población\nObjetivo', sub:'Mayores 18 · desempl.', icon:'👥', x:685,y:110,
+        det:'Personas mayores de 18 años desempleadas o subempleadas. No hay restricción de edad máxima; el programa atiende tanto a jóvenes como a adultos en busca de empleo formal.' },
+      { id:'bec', lbl:'Subprograma\nBécate', sub:'Capacitación técnica', icon:'🎓', x:785,y:255,
+        det:'Bécate es el subprograma principal del PAE. Ofrece capacitación técnica y competencias laborales acordes al mercado, facilitando la incorporación a empresas formales o el desarrollo de actividades por cuenta propia. Más de 12,000 jóvenes beneficiados con becas.' },
+      { id:'ser', lbl:'Servicios SNE', sub:'Bolsa · Caravanas', icon:'🔗', x:680,y:408,
+        det:'El SNE Veracruz implementa caravanas de servicios que acercan a las comunidades: bolsa de trabajo, capacitación, reclutamiento y vinculación directa con empleadores formales.' },
+      { id:'res', lbl:'Resultados', sub:'12,000+ becas', icon:'📊', x:450,y:432,
+        det:'Más de 12,000 jóvenes beneficiados con becas de capacitación, fortaleciendo su inserción al ámbito laboral mediante acciones coordinadas entre el Gobierno de Veracruz y el Gobierno de México.' },
+      { id:'vin', lbl:'Vinculación\nEmpresarial', sub:'Sector productivo', icon:'🤝', x:198,y:408,
+        det:'El programa vincula directamente a los beneficiarios con empresas y empleadores formales, facilitando procesos de reclutamiento y contratación a través del SNE Veracruz.' },
+      { id:'ope', lbl:'Operadores', sub:'SNE + STPSP', icon:'🏢', x:105,y:255,
+        det:'Operado conjuntamente por la Secretaría de Trabajo, Previsión Social y Productividad (STPSP) de Veracruz y el Servicio Nacional de Empleo (SNE) estatal.' },
+      { id:'mod', lbl:'Modalidades', sub:'Presencial · Caravanas', icon:'📍', x:198,y:110,
+        det:'Atención presencial en oficinas del SNE en Veracruz; caravanas de servicios que visitan distintas localidades; convocatorias abiertas (ej. PAE 2026) para capacitación y vinculación laboral.' }
+    ],
+    conns:[['c','obj'],['c','pob'],['c','bec'],['c','ser'],['c','res'],['c','vin'],['c','ope'],['c','mod']]
+  },
+  {
+    id:'atp', name:'Apoyo a la Palabra – Plan México', short:'Apoyo a\nla Palabra', type:'Estatal · SEDESOL', color:'#BF360C', icon:'🌱',
+    nodes:[
+      { id:'c', lbl:'Apoyo a la\nPalabra\nPlan México', sub:'SEDESOL Veracruz', icon:'🌱', cx:true, x:450,y:245,
+        det:'Programa estatal de SEDESOL Veracruz. Impulsa la independencia económica de personas en situación de pobreza mediante apoyos directos sin intermediarios para microemprendimientos. Alineado con el Plan Veracruzano 2025–2030.' },
+      { id:'obj', lbl:'Objetivo', sub:'Independencia económica', icon:'🎯', x:450,y:72,
+        det:'Incrementar el bienestar social mediante condiciones que fomenten la independencia económica de las personas beneficiarias, apoyando el desarrollo de actividades productivas y microemprendimientos locales.' },
+      { id:'pob', lbl:'Población\nObjetivo', sub:'Pobreza · ZAP · Vulnerab.', icon:'👥', x:685,y:110,
+        det:'Personas en situación de pobreza o vulnerabilidad: desempleados, trabajadores informales, jefes de familia, indígenas, deportados, víctimas de violencia, y habitantes de Zonas de Atención Prioritaria (ZAP).' },
+      { id:'apo', lbl:'Esquema de\nApoyos', sub:'3 fases progresivas', icon:'💰', x:785,y:255,
+        det:'Esquema progresivo con reintegro voluntario:\n• Fase 1: $7,000 – $10,000 pesos\n• Fase 2: $12,000 pesos (previa reintegración voluntaria de Fase 1)\n• Fase 3: $15,000 pesos (previa reintegración de Fase 2)\nReintegro voluntario en máximo 6 meses o antes del cierre fiscal.' },
+      { id:'res', lbl:'Resultados', sub:'8,143 apoyos · 57M pesos', icon:'📊', x:680,y:408,
+        det:'Desde junio 2025: 8,143 apoyos directos otorgados, con inversión de más de 57 millones de pesos. En su 6ª entrega: 807 microemprendedores en 8 municipios (629 mujeres, 178 hombres).' },
+      { id:'gen', lbl:'Enfoque de\nGénero', sub:'5,556 mujeres (68%)', icon:'♀️', x:450,y:432,
+        det:'Del total de apoyos otorgados, 5,556 han sido dirigidos a mujeres (68% del total), consolidando el protagonismo femenino en el programa y promoviendo la autonomía económica femenina.' },
+      { id:'emp', lbl:'Emprendimientos\nApoyados', sub:'Piñatas · Maíz · Quesos', icon:'🛒', x:198,y:408,
+        det:'Los beneficiarios desarrollan proyectos productivos diversos: fabricación de piñatas, procesamiento de maíz, elaboración de quesos, artesanías, entre otros. Opera en 112 municipios, priorizando áreas rurales.' },
+      { id:'ope', lbl:'Operadores', sub:'SEDESOL + FINABIEN', icon:'🏢', x:105,y:255,
+        det:'Operado por la Secretaría de Desarrollo Social de Veracruz (SEDESOL) en colaboración con la Financiera del Bienestar (FINABIEN), en sustitución de la antigua institución Telégrafos.' },
+      { id:'ali', lbl:'Alineación\nEstratégica', sub:'Plan Veracruzano 2025–30', icon:'📋', x:198,y:110,
+        det:'Alineado con el Eje Rector 1: "Veracruz con Bienestar y Humanismo" del Plan Veracruzano de Desarrollo 2025–2030, cuyo objetivo es mejorar de manera sostenida la calidad de vida de los habitantes del estado.' }
+    ],
+    conns:[['c','obj'],['c','pob'],['c','apo'],['c','res'],['c','gen'],['c','emp'],['c','ope'],['c','ali']]
+  },
+  {
+    id:'jte', name:'Juventud Transforma y Emprende', short:'JTE', type:'Estatal · STPSP', color:'#6A1B9A', icon:'🚀',
+    nodes:[
+      { id:'c', lbl:'Juventud\nTransforma y\nEmprende', sub:'STPSP Veracruz', icon:'🚀', cx:true, x:450,y:245,
+        det:'Convocatoria de la STPSP Veracruz que fomenta la innovación y el emprendimiento juvenil con enfoque multidimensional: social, productivo y tecnológico. Combina reconocimiento, formación técnica y apoyo económico.' },
+      { id:'obj', lbl:'Objetivo', sub:'Innovación · Emprendimiento', icon:'🎯', x:450,y:72,
+        det:'Fomentar la innovación y el emprendimiento juvenil en Veracruz, apoyando a jóvenes para desarrollar proyectos con impacto social, productivo o tecnológico, generando empleo y sostenibilidad económica local.' },
+      { id:'pob', lbl:'Población\nObjetivo', sub:'Jóvenes 16–35 años', icon:'👥', x:685,y:110,
+        det:'Jóvenes de entre 16 y 35 años residentes en Veracruz con ideas o proyectos de emprendimiento. En 2025 se registraron 132 participantes, evaluados en cuatro categorías temáticas.' },
+      { id:'cat', lbl:'Categorías', sub:'4 ejes temáticos', icon:'📂', x:785,y:255,
+        det:'Los proyectos se evalúan en 4 categorías:\n• Emprendimiento social\n• Negocio productivo\n• Innovación tecnológica\n• Inserción o capacitación laboral' },
+      { id:'pro', lbl:'Proyectos\nDestacados', sub:'5 ganadores 2025', icon:'🏆', x:680,y:408,
+        det:'5 proyectos reconocidos 2025:\n• Catenaria Chainz (Xalapa): manualidades y accesorios\n• Juegos de mesa en braille Paola (Xalapa): inclusión educativa\n• Emotwis (Veracruz): prototipo anti-bullying\n• Find My Roomie (Xalapa): app de hospedaje compartido\n• Raíces Azules (Úrsulo Galván): artesanías de palma' },
+      { id:'apr', lbl:'Reconocimientos\ny Apoyos', sub:'Chicomexóchitl + $', icon:'🏅', x:450,y:432,
+        det:'Los ganadores reciben:\n• Distintivo Chicomexóchitl (símbolo de juventud y futuro laboral)\n• Asesoría y asistencia técnica para fortalecer sus proyectos\n• Incentivos económicos directos' },
+      { id:'imp', lbl:'Impacto\nEsperado', sub:'Empleo · Economía local', icon:'📈', x:198,y:408,
+        det:'La iniciativa promueve la visibilidad de jóvenes emprendedores y la creación de negocios con potencial de generar empleo y sostener familias, fomentando la innovación local y el desarrollo económico sostenible.' },
+      { id:'ope', lbl:'Operador', sub:'STPSP Veracruz', icon:'🏢', x:105,y:255,
+        det:'Operado por la Secretaría de Trabajo, Previsión Social y Productividad (STPSP) del Estado de Veracruz, con enfoque multidimensional que combina reconocimiento, formación técnica y apoyo económico.' },
+      { id:'enf', lbl:'Enfoque\nMultidimensional', sub:'Social · Prod. · Tech', icon:'🔄', x:198,y:110,
+        det:'Instrumento estratégico que integra tres dimensiones: reconocimiento público (Distintivo Chicomexóchitl), formación técnica especializada y apoyo económico directo. Favorece la innovación local en múltiples ámbitos.' }
+    ],
+    conns:[['c','obj'],['c','pob'],['c','cat'],['c','pro'],['c','apr'],['c','imp'],['c','ope'],['c','enf']]
+  },
+  {
+    id:'pag', name:'Programa de Atención a Grupos Prioritarios', short:'PAGUP', type:'Estatal · SEDESOL', color:'#B71C1C', icon:'🤝',
+    nodes:[
+      { id:'c', lbl:'PAGUP', sub:'Atención Grupos Prioritarios', icon:'🤝', cx:true, x:450,y:245,
+        det:'Programa estatal que mejora las condiciones de vida de grupos vulnerables afectados por determinantes sociales. Atiende adultos mayores, personas con discapacidad, primera infancia, NNA y jóvenes en situación de calle.' },
+      { id:'obj', lbl:'Objetivo', sub:'Mejora condiciones de vida', icon:'🎯', x:450,y:72,
+        det:'Contribuir a mejorar las condiciones de vida de grupos vulnerables. Favorecer el envejecimiento activo, la inclusión de personas con discapacidad, la atención a la primera infancia y la restitución de derechos de NNA.' },
+      { id:'gru', lbl:'Grupos\nPrioritarios', sub:'AM · Discap. · NNA · Jóvenes', icon:'👥', x:685,y:110,
+        det:'Grupos atendidos:\n• Adultos mayores (envejecimiento activo)\n• Personas con discapacidad\n• Primera infancia\n• Niñas, niños y adolescentes (NNA)\n• Jóvenes en situación de calle o riesgo social' },
+      { id:'pro', lbl:'Proyectos\nProductivos', sub:'Insumos · Herramientas', icon:'🔧', x:785,y:255,
+        det:'Vertiente de Proyectos Productivos: apoyos para actividades que generen ingresos adicionales. Se entregan herramientas básicas, materias primas y animales productivos. Dirigido a madres solteras, indígenas y personas con discapacidad, entre otros.' },
+      { id:'jov', lbl:'Acciones\npara Jóvenes', sub:'Calle · Centros · Derechos', icon:'🌟', x:680,y:408,
+        det:'Acciones específicas para jóvenes:\n• Atención en Centros de Asistencia Social (Conecalli, Casa de Medio Camino)\n• Apoyo a jóvenes en situación de calle (grupo prioritario de riesgo)\n• Restitución de derechos: educación, salud y preparación para reintegración social o familiar' },
+      { id:'cap', lbl:'Capacitación\ny Habilidades', sub:'Proceso sistemático', icon:'📚', x:450,y:432,
+        det:'Proceso sistemático de capacitación continua para ampliar conocimientos, habilidades y aptitudes de los participantes en programas de bienestar comunitario, con enfoque en su desarrollo integral.' },
+      { id:'apo', lbl:'Apoyos\nFuncionales', sub:'Sillas · Prótesis', icon:'♿', x:198,y:408,
+        det:'Se proporcionan apoyos funcionales (sillas de ruedas, prótesis, dispositivos de movilidad) que permiten a las personas con discapacidad realizar actividades laborales y desplazarse de manera independiente.' },
+      { id:'enf', lbl:'Enfoque\nIntegral', sub:'Social · Salud · Laboral', icon:'🔄', x:105,y:255,
+        det:'Enfoque integral: mejora económica mediante proyectos productivos, atención en centros de asistencia social, restitución de derechos, capacitación continua y provisión de apoyos funcionales para el trabajo autónomo.' },
+      { id:'crit', lbl:'Criterios de\nSelección', sub:'Vulnerabilidad verificada', icon:'📋', x:198,y:110,
+        det:'Elegibilidad:\n• Madres solteras jefas de familia\n• Personas indígenas\n• Personas con discapacidad\n• Desempleo o trabajo informal\n• Ingresos ≤ 2 salarios mínimos\n• Víctimas de violencia familiar o social\n• Familiares con enfermedades crónicas o degenerativas' }
+    ],
+    conns:[['c','obj'],['c','gru'],['c','pro'],['c','jov'],['c','cap'],['c','apo'],['c','enf'],['c','crit']]
+  }
+];
+
+function hexRgba(hex, a) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+const tabs = document.getElementById('tabs');
+const main = document.getElementById('main');
+
+P.forEach((p, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (i===0?' active':'');
+  btn.style.setProperty('--c', p.color);
+  btn.innerHTML = `<span class="tshort">${p.icon} ${p.short.replace('\n',' ')}</span><span>${p.type}</span>`;
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.prog-sec').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('s-'+p.id).classList.add('active');
+  };
+  tabs.appendChild(btn);
+
+  const sec = document.createElement('div');
+  sec.className = 'prog-sec'+(i===0?' active':'');
+  sec.id = 's-'+p.id;
+  sec.style.setProperty('--c', p.color);
+
+  const cNode = p.nodes.find(n=>n.id==='c');
+  sec.innerHTML = `
+    <div class="map-card">
+      <div class="card-header">
+        <h2>${p.icon} ${p.name}</h2>
+        <span class="badge">${p.type}</span>
+      </div>
+      <div class="map-area" id="a-${p.id}">
+        <svg class="map-svg" id="svg-${p.id}" viewBox="0 0 900 480" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="det-panel" id="d-${p.id}">
+        <span class="det-icon">${p.icon}</span>
+        <div class="det-body">
+          <h4>${p.name}</h4>
+          <p>${cNode.det}</p>
+        </div>
+      </div>
+      <div class="hint">💡 Haz clic en cualquier nodo para ver su descripción detallada</div>
+    </div>`;
+  main.appendChild(sec);
+
+  const svg = document.getElementById('svg-'+p.id);
+  const area = document.getElementById('a-'+p.id);
+  const det = document.getElementById('d-'+p.id);
+
+  p.conns.forEach(([a,b]) => {
+    const na=p.nodes.find(n=>n.id===a), nb=p.nodes.find(n=>n.id===b);
+    const el=document.createElementNS('http://www.w3.org/2000/svg','line');
+    el.setAttribute('x1',na.x); el.setAttribute('y1',na.y);
+    el.setAttribute('x2',nb.x); el.setAttribute('y2',nb.y);
+    el.setAttribute('stroke', p.color);
+    el.setAttribute('stroke-width','2.5');
+    el.setAttribute('stroke-opacity','0.32');
+    svg.appendChild(el);
+  });
+
+  p.nodes.forEach(n => {
+    const isCx = n.cx;
+    const w = isCx ? 128 : 136;
+    const lp = (n.x/900*100), tp = (n.y/480*100);
+    const div = document.createElement('div');
+    div.className = 'node'+(isCx?' central':'');
+    div.style.cssText = `left:calc(${lp}% - ${w/2}px);top:calc(${tp}% - ${isCx?64:38}px);width:${w}px;${isCx?`height:${w}px;`:''}background:${isCx?p.color:hexRgba(p.color,0.82)};box-shadow:0 4px 14px ${hexRgba(p.color,0.28)};`;
+    div.innerHTML = `<span class="ni">${n.icon}</span><span class="nt">${n.lbl.replace(/\n/g,'<br>')}</span>${n.sub?`<span class="ns">${n.sub}</span>`:''}`;
+    div.onclick = () => {
+      document.querySelectorAll(`#a-${p.id} .node`).forEach(el=>el.classList.remove('sel'));
+      div.classList.add('sel');
+      det.innerHTML = `<span class="det-icon">${n.icon}</span><div class="det-body"><h4>${n.lbl.replace(/\n/g,' ')}</h4><p>${n.det.replace(/\n/g,'<br>')}</p></div>`;
+    };
+    area.appendChild(div);
+  });
+});
+</script>
+</body>
+</html>

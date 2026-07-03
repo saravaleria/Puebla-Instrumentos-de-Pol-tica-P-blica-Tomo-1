@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapas Económicos — Tres Municipios de Veracruz</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#EEF2F7;font-size:14px;}
+header{background:linear-gradient(135deg,#1B2A4A 0%,#2E4A7A 100%);color:white;padding:16px 24px;text-align:center;}
+header h1{font-size:17px;font-weight:700;}
+header p{font-size:12px;opacity:.7;margin-top:3px;}
+.tabs-wrap{background:white;box-shadow:0 2px 6px rgba(0,0,0,.09);position:sticky;top:0;z-index:100;}
+.tabs{display:flex;overflow-x:auto;padding:0 12px;gap:2px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab-btn{padding:10px 16px;border:none;background:none;font-size:11px;font-weight:600;color:#718096;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.18s;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.tab-btn .ts{font-size:13px;font-weight:800;}
+.tab-btn .tt{font-size:10px;color:#A0AEC0;}
+.tab-btn.active{color:var(--c);border-bottom-color:var(--c);}
+.tab-btn:hover:not(.active){color:var(--c);background:#F7FAFC;}
+.content{padding:16px;max-width:960px;margin:0 auto;}
+.sec{display:none;}
+.sec.active{display:block;}
+.map-card{background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.09);overflow:hidden;}
+.card-hdr{background:var(--c);color:white;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.card-hdr h2{font-size:14px;font-weight:700;}
+.badge{background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.map-area{position:relative;width:100%;height:480px;background:linear-gradient(145deg,#f8fafc 0%,#edf2f7 100%);overflow:hidden;}
+.map-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.node{position:absolute;border-radius:10px;cursor:pointer;transition:transform .2s,box-shadow .2s;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 10px;border:2px solid transparent;user-select:none;}
+.node:hover,.node.sel{transform:scale(1.07) translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.22)!important;z-index:20;}
+.node.sel{border-color:rgba(255,255,255,.6);}
+.node.central{border-radius:50%;}
+.ni{font-size:18px;margin-bottom:3px;}
+.nt{font-size:10.5px;font-weight:700;line-height:1.25;color:white;}
+.ns{font-size:9px;opacity:.82;margin-top:2px;line-height:1.25;color:white;}
+.det-panel{padding:14px 20px;min-height:88px;border-top:1px solid #E2E8F0;background:white;display:flex;align-items:flex-start;gap:14px;}
+.det-icon{font-size:26px;flex-shrink:0;margin-top:1px;}
+.det-body h4{font-size:13px;font-weight:700;color:var(--c);margin-bottom:4px;}
+.det-body p{font-size:12px;color:#4A5568;line-height:1.65;}
+.hint{font-size:10.5px;color:#A0AEC0;text-align:center;padding:7px 20px 10px;border-top:1px solid #EDF2F7;}
+.comp-sec{display:flex;flex-direction:column;gap:16px;}
+.comp-block{background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.09);overflow:hidden;}
+.comp-hdr{background:linear-gradient(135deg,#1B2A4A 0%,#2E4A7A 100%);color:white;padding:12px 20px;}
+.comp-hdr h2{font-size:14px;font-weight:700;}
+.comp-hdr p{font-size:11px;opacity:.75;margin-top:3px;}
+.radar-wrap{padding:20px;display:flex;justify-content:center;}
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;}
+.muni-card{border-radius:10px;overflow:hidden;border:1px solid #E2E8F0;}
+.mc-head{padding:10px 14px;color:white;display:flex;align-items:center;gap:10px;}
+.mc-ico{font-size:22px;}
+.mc-head h3{font-size:13px;font-weight:700;margin-bottom:1px;}
+.mc-tipo{font-size:10px;opacity:.85;}
+.mc-body{padding:10px 14px;}
+.mc-row{display:flex;flex-direction:column;padding:5px 0;border-bottom:.5px solid #EDF2F7;}
+.mc-row:last-child{border-bottom:none;}
+.mc-lbl{font-size:9.5px;color:#A0AEC0;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.mc-val{font-size:11.5px;color:#2D3748;line-height:1.4;}
+.mc-row.hl .mc-val{font-weight:700;color:var(--c);}
+.conv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
+.conv-item{background:#F8FAFC;border-radius:8px;padding:12px 14px;border-left:4px solid var(--lc);}
+.conv-item h4{font-size:12px;font-weight:700;color:var(--lc);margin-bottom:5px;}
+.conv-item p{font-size:11.5px;color:#4A5568;line-height:1.6;}
+@media(max-width:700px){.cards-grid{grid-template-columns:1fr;}.conv-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ Mapas Económicos — Córdoba · Orizaba · Tlaquilpa</h1>
+  <p>Panorama económico · Marco estratégico · PMD 2022–2025 · Haz clic en cada nodo para explorar</p>
+</header>
+<div class="tabs-wrap"><div class="tabs" id="tabs"></div></div>
+<div class="content" id="main"></div>
+<script>
+const M=[
+  {
+    id:'cor',name:'Córdoba',sub:'Centro Agroindustrial',color:'#1565C0',icon:'☕',
+    nodes:[
+      {id:'c',lbl:'Córdoba\nVeracruz',sub:'Agroindustria · Comercio',icon:'☕',cx:true,x:450,y:240,
+       det:'Municipio de 335,000+ habitantes, pilar agroindustrial de Veracruz. Su economía descansa en el café, el azúcar y el comercio. Enfrenta retos de inseguridad e infraestructura que han frenado su crecimiento reciente, pero mantiene su rol histórico como centro logístico y exportador.'},
+      {id:'agro',lbl:'Agroindustria',sub:'Café · Azúcar · Ganadería',icon:'🌾',x:450,y:68,
+       det:'Pilar económico principal. Café, caña de azúcar, ganadería, plátano y mango son la base productiva. Destaca la industria cafetalera con capacidad de exportar extractos y concentrados. La integración de producción primaria con procesamiento industrial genera una cadena de valor altamente competitiva.'},
+      {id:'exp',lbl:'Exportaciones',sub:'>$92M USD café (2024)',icon:'🚢',x:690,y:108,
+       det:'Córdoba es uno de los principales exportadores de café tostado y derivados del país, con más de 92 millones de dólares en 2024. Produce extractos, concentrados y café tostado para mercados nacionales e internacionales con reconocimiento nacional por calidad.'},
+      {id:'ter',lbl:'Sector\nTerciario',sub:'Comercio · Salud · Edu.',icon:'🏪',x:792,y:240,
+       det:'Sector servicios robusto: comercio, transporte, salud y educación consolidan a Córdoba como nodo regional. Concentra parte significativa del empleo local. El sector financiero y los servicios profesionales complementan su perfil de centro urbano de servicios.'},
+      {id:'des',lbl:'Desafíos',sub:'Inseguridad · Infraestr.',icon:'⚠️',x:690,y:385,
+       det:'La inseguridad y deficiencias en infraestructura han impactado al autotransporte. Se ha registrado salida de empresas avícolas y de transporte. Estos factores inciden negativamente en la logística y competitividad del municipio.'},
+      {id:'pmd',lbl:'PMD 2022–25',sub:'Empleo · Juventud · Innov.',icon:'📋',x:450,y:432,
+       det:'El PMD reconoce la generación de empleo y el desarrollo juvenil como ejes estratégicos. Implementa un ciclo cerrado: Formación (ICATVER) → Vinculación con sector privado → Emprendimiento (incubadoras). El PMD 2026-2029 está en fase de consulta ciudadana con enfoque digital y derechos humanos.'},
+      {id:'form',lbl:'Formación\nLaboral',sub:'ICATVER · Incubadoras',icon:'🎓',x:200,y:385,
+       det:'Ciclo de empleabilidad: capacitación técnica con validez oficial (ICATVER), convenios con sector privado para responder a demanda real del mercado, e incubadoras para que el joven no solo busque empleo sino que lo cree. Instituto Municipal de la Juventud coordina estas acciones.'},
+      {id:'emp',lbl:'Apoyo\nEmpresarial',sub:'MiPyMES · SEDECOP · Buen Fin',icon:'💼',x:100,y:240,
+       det:'La Dirección de Desarrollo Económico impulsa: vinculación de MiPyMES con cadenas comerciales, "Encuentros de Negocios Córdoba 2025" (SEDECOP), campañas del Buen Fin para activación comercial y apoyo técnico para permanencia en el mercado.'},
+      {id:'dig',lbl:'Desregulación\nDigital',sub:'Gobierno Digital · Licencias',icon:'💻',x:200,y:108,
+       det:'Estrategia clave del PMD: reducir costos de entrada para emprendedores, combatir informalidad facilitando licencias municipales ágiles y digitalizar trámites. El "Gobierno Digital" es el soporte tecnológico que hace viable la modernización empresarial y la certeza jurídica.'},
+    ],
+    conns:[['c','agro'],['c','exp'],['c','ter'],['c','des'],['c','pmd'],['c','form'],['c','emp'],['c','dig']]
+  },
+  {
+    id:'ori',name:'Orizaba',sub:'Industrial y Turístico',color:'#2E7D32',icon:'🏔️',
+    nodes:[
+      {id:'c',lbl:'Orizaba\nVeracruz',sub:'Industria · Turismo · Servicios',icon:'🏔️',cx:true,x:450,y:240,
+       det:'Histórico centro industrial veracruzano en transición hacia el sector terciario. Como Pueblo Mágico, el turismo se consolida como motor de crecimiento. Combina manufactura tradicional con servicios modernos y apuesta por digitalización. Enfrenta retos de informalidad laboral y precariedad juvenil.'},
+      {id:'tur',lbl:'Turismo',sub:'Pueblo Mágico · Teleférico',icon:'🎭',x:450,y:68,
+       det:'Motor principal de la reactivación. Teleférico de Orizaba, Poliforum Cultural Mier y Pesado, Ecoparque Cerro del Borrego y Planetario generan derrama económica constante. Proyectos detonantes: Tobogán de la Montaña y Casavegas crearán empleos directos e indirectos. Capacitación especializada de guías turísticos.'},
+      {id:'ter',lbl:'Sector\nTerciario',sub:'Comercio · Servicios · Alimentos',icon:'🏪',x:690,y:108,
+       det:'Principal motor económico. Comercio al por menor y servicios de alimentos, bebidas y hospedaje concentran gran parte del empleo. El turismo ha expandido la oferta de servicios y fortalecido negocios locales.'},
+      {id:'ind',lbl:'Manufactura',sub:'Cuero · Papel · Alimentos',icon:'🏭',x:792,y:240,
+       det:'Sector histórico fundamental. Producción de cuero y manufacturas, empaques de papel e industria alimentaria. Aunque relevante en generación de ingresos, enfrenta retos por cambios en mercados global y nacional. Su peso relativo ha disminuido frente al sector servicios.'},
+      {id:'des',lbl:'Desafíos',sub:'Informalidad · Precariedad',icon:'⚠️',x:690,y:385,
+       det:'El mercado laboral juvenil enfrenta: precariedad, bajos salarios, limitadas prestaciones y alta informalidad. Muchos jóvenes se insertan en comercio informal o servicios inestables. El crecimiento convive con incertidumbre económica e inflación.'},
+      {id:'pmd',lbl:'PMD 2022–25\nEje 6',sub:'Impulso Económico Turístico',icon:'📋',x:450,y:432,
+       det:'El Eje 6 impulsa: fomento al emprendimiento, simplificación de trámites, modernización del comercio post-COVID, inclusión laboral con equidad, integración de jóvenes al turismo y conciencia ambiental productiva. Basado en tres mecanismos: eliminar barreras, desarrollar capacidades y generar oportunidades reales.'},
+      {id:'dig',lbl:'Orizaba\nConectada',sub:'Internet gratis · Digital',icon:'💻',x:200,y:385,
+       det:'Estrategia "Orizaba Conectada": internet gratuito en espacios públicos para estudio y trabajo remoto; digitalización de trámites municipales; desarrollo de plataformas y apps; apoyo a jóvenes emprendedores digitales.'},
+      {id:'inf',lbl:'Infraestructura',sub:'Libramiento Córdoba-Orizaba',icon:'🛣️',x:100,y:240,
+       det:'Proyecto estratégico 2025: libramiento Córdoba-Orizaba para mejorar conectividad y logística regional. Busca consolidar a Orizaba como nodo clave de enlace comercial e industrial en Veracruz.'},
+      {id:'jov',lbl:'Juventud\ny Empleo',sub:'Turismo · Digital · Equidad',icon:'🚀',x:200,y:108,
+       det:'Enfoque multidimensional: capacitación turística especializada, integración al turismo sostenible, talleres de artesanías como emprendimiento cultural, formación en competencias digitales. Políticas de equidad para eliminar barreras de acceso al empleo formal.'},
+    ],
+    conns:[['c','tur'],['c','ter'],['c','ind'],['c','des'],['c','pmd'],['c','dig'],['c','inf'],['c','jov']]
+  },
+  {
+    id:'tla',name:'Tlaquilpa',sub:'Comunidad Rural Indígena',color:'#6A1B9A',icon:'🧶',
+    nodes:[
+      {id:'c',lbl:'Tlaquilpa\nVeracruz',sub:'Sierra de Zongolica · Náhuatl',icon:'🧶',cx:true,x:450,y:240,
+       det:'Municipio de 7,933 habitantes de la Sierra de Zongolica. El 91.59% habla náhuatl. Economía de subsistencia con artesanía textil como patrimonio vivo. Enfrenta migración forzada, rezago social extremo y brecha digital. El 87.2% depende de transporte público con 32.1 min. promedio de desplazamiento al trabajo.'},
+      {id:'ide',lbl:'Identidad\nNáhuatl',sub:'91.59% hablantes · Sierra',icon:'🏔️',x:450,y:68,
+       det:'El 91.59% de la población habla náhuatl. Esta identidad cultural es el eje transversal de cualquier política pública, requiriendo enfoque intercultural. La cosmovisión nahua orienta las prácticas agrícolas, artesanales y comunitarias. Estructura etaria joven: bono demográfico con presión sobre el mercado laboral local.'},
+      {id:'art',lbl:'Artesanía\nTextil',sub:'Lana · Telar · Tintes naturales',icon:'🧵',x:690,y:108,
+       det:'Actividad ancestral liderada por mujeres. Usan telar de cintura y tintes naturales (cochinilla grana, cortezas). Producen fajas, rebozos, jorongos, cotones con iconografía nahua. Programa Manos Veracruzanas (DIF Estatal) apoya su comercialización eliminando intermediarios y garantizando comercio justo en Xalapa.'},
+      {id:'agr',lbl:'Agricultura\ny Silvicultura',sub:'Maíz · Frijol · Haba · Leña',icon:'🌽',x:792,y:240,
+       det:'Base de subsistencia: maíz, frijol, haba, chícharo y arroz para autoconsumo. Silvicultura sustentable (leña y carbón vegetal). Ganadería ovina de traspatio. Sembrando Vida implementa Sistemas Agroforestales (SAF); Producción para el Bienestar incentiva el relevo generacional agrícola ($6,450/mes + capacitación).'},
+      {id:'mig',lbl:'Migración\nLaboral',sub:'Orizaba · Córdoba · EE.UU.',icon:'🚶',x:690,y:385,
+       det:'Tres vertientes: continuidad tradicional (campo y tejido), migración a centros urbanos (Orizaba, Córdoba) para construcción y comercio, y flujo hacia EE.UU. para agricultura industrial. El PMD busca que "la migración sea una opción y no una necesidad" mediante empleos dignos locales.'},
+      {id:'prog',lbl:'Programas\nFederales',sub:'JCF · Apoyo Palabra · Sembrando',icon:'🌱',x:450,y:432,
+       det:'JCF (solo 2 beneficiarios — brecha crítica por falta de conectividad y desconocimiento de reglas); Apoyo a la Palabra (crédito 0% activo en Sierra de Zongolica, entrega directa); Sembrando Vida ($6,450/mes + capacitación técnica en SAF y MIAF, integra 68,000 campesinos en Veracruz).'},
+      {id:'pmd',lbl:'PMD 2022–25',sub:'Formalización · Anti-migración',icon:'📋',x:200,y:385,
+       det:'Objetivos: formalización del empleo, fortalecimiento de economías tradicionales, mitigación de migración forzada. Estrategias: industrias familiares, exportación de artesanías y muebles, PyMES locales, caminos "saca cosechas" para rentabilizar el campo y mejora de infraestructura educativa.'},
+      {id:'ret',lbl:'Retos\nEstructurales',sub:'Brecha digital · Rezago extremo',icon:'⚠️',x:100,y:240,
+       det:'Rezago social muy alto y pobreza extrema; escasa conectividad tecnológica (barreras para registro en JCF); movilidad dependiente (87.2% transporte público, 32.1 min desplazamiento). Solo 2 beneficiarios de JCF reflejan la brecha de implementación de programas federales.'},
+      {id:'man',lbl:'Manos\nVeracruzanas',sub:'DIF · Comercio justo',icon:'🤝',x:200,y:108,
+       det:'Programa del DIF Estatal que profesionaliza la venta de artesanías de la Sierra de Zongolica. Elimina el intermediarismo, garantiza precios justos y abre puntos de venta en Xalapa. Requiere: formato oficial, INE, CURP, comprobante de domicilio y fotografías del producto y taller.'},
+    ],
+    conns:[['c','ide'],['c','art'],['c','agr'],['c','mig'],['c','prog'],['c','pmd'],['c','ret'],['c','man']]
+  }
+];
+
+const COMP={
+  radar:{
+    labels:[['Diversificación','económica'],['Capacidad','exportadora'],['Infraestr.','digital'],['Empleo','formal'],['Atención','juventud'],['Turismo /','servicios']],
+    ds:[
+      {lbl:'Córdoba',data:[7,9,6,7,7,4],color:'#1565C0'},
+      {lbl:'Orizaba',data:[8,3,8,7,8,9],color:'#2E7D32'},
+      {lbl:'Tlaquilpa',data:[2,2,2,2,6,2],color:'#6A1B9A'}
+    ]
+  },
+  cards:[
+    {mun:'Córdoba',color:'#1565C0',icon:'☕',tipo:'Agroindustrial',rows:[
+      {l:'Población',v:'335,000+ habitantes'},
+      {l:'Exportaciones',v:'>$92M USD café tostado (2024)',hl:true},
+      {l:'Sector líder',v:'Primario / Secundario — Agroindustria'},
+      {l:'Reto principal',v:'Inseguridad e infraestructura'},
+      {l:'PMD clave',v:'ICATVER + Incubadoras + Desregulación'},
+      {l:'Rezago social',v:'Medio'},
+      {l:'Fortaleza',v:'Exportación cafetalera + nodo logístico',hl:true}
+    ]},
+    {mun:'Orizaba',color:'#2E7D32',icon:'🏔️',tipo:'Industrial / Turístico',rows:[
+      {l:'Población',v:'~127,000 habitantes'},
+      {l:'Exportaciones',v:'Limitadas (mercado regional)'},
+      {l:'Sector líder',v:'Terciario — Turismo + Servicios',hl:true},
+      {l:'Reto principal',v:'Informalidad y precariedad laboral'},
+      {l:'PMD clave',v:'Turismo + Orizaba Conectada + Eje 6'},
+      {l:'Rezago social',v:'Bajo-Medio'},
+      {l:'Fortaleza',v:'Pueblo Mágico + Diversificación económica',hl:true}
+    ]},
+    {mun:'Tlaquilpa',color:'#6A1B9A',icon:'🧶',tipo:'Rural Indígena',rows:[
+      {l:'Población',v:'7,933 hab. (91.59% nahua)'},
+      {l:'Exportaciones',v:'Potencial artesanal no consolidado'},
+      {l:'Sector líder',v:'Primario — Subsistencia + artesanía'},
+      {l:'Reto principal',v:'Migración forzada y rezago extremo',hl:true},
+      {l:'PMD clave',v:'Anti-migración + Manos Veracruzanas + JCF'},
+      {l:'Rezago social',v:'Muy alto'},
+      {l:'Fortaleza',v:'Patrimonio cultural náhuatl + artesanías',hl:true}
+    ]}
+  ],
+  conv:[
+    {title:'Eje común: Juventud y Empleo',color:'#2C5282',
+     text:'Los tres PMDs priorizan la generación de empleo juvenil con enfoques radicalmente distintos: Córdoba apuesta por incubación empresarial e ICATVER; Orizaba por turismo sostenible y digitalización; Tlaquilpa por retención de talento y modernización de tradiciones ancestrales. Los tres reconocen a la juventud como motor del desarrollo local.'},
+    {title:'Desregulación y simplificación administrativa',color:'#1565C0',
+     text:'Córdoba y Orizaba comparten una estrategia de simplificación de trámites y gobierno digital para atraer inversión. Tlaquilpa carece de esta capacidad institucional, siendo una de las brechas estructurales más significativas. La digitalización de servicios públicos es un vector de desigualdad entre los tres municipios.'},
+    {title:'Programas federales: cobertura radicalmente desigual',color:'#6A1B9A',
+     text:'JCF y Apoyo a la Palabra están disponibles en los tres municipios, pero con resultados dispares: Córdoba reporta 16,562 beneficiarios de JCF; Tlaquilpa tiene apenas 2. Esta brecha revela que la cobertura formal de los programas no garantiza su adopción efectiva. El acompañamiento técnico diferenciado es indispensable en comunidades con rezago digital.'},
+    {title:'Tres modelos de desarrollo en una misma entidad',color:'#2E7D32',
+     text:'Los tres municipios representan etapas distintas del desarrollo económico veracruzano: Córdoba (industrialización agraria + exportación), Orizaba (transición hacia servicios y turismo) y Tlaquilpa (subsistencia + patrimonio cultural en transformación). Una política regional efectiva debe articular estas diferencias con estrategias diferenciadas, no soluciones homogéneas.'}
+  ]
+};
+
+function hexRgba(h,a){
+  const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+const tabsEl=document.getElementById('tabs');
+const mainEl=document.getElementById('main');
+
+M.forEach((m,i)=>{
+  const btn=document.createElement('button');
+  btn.className='tab-btn'+(i===0?' active':'');
+  btn.style.setProperty('--c',m.color);
+  btn.innerHTML=`<span class="ts">${m.icon} ${m.name}</span><span class="tt">${m.sub}</span>`;
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('s-'+m.id).classList.add('active');
+  };
+  tabsEl.appendChild(btn);
+
+  const sec=document.createElement('div');
+  sec.className='sec'+(i===0?' active':'');
+  sec.id='s-'+m.id;
+  sec.style.setProperty('--c',m.color);
+  const cN=m.nodes.find(n=>n.id==='c');
+  sec.innerHTML=`
+    <div class="map-card">
+      <div class="card-hdr">
+        <h2>${m.icon} ${m.name} — Panorama Económico y Marco Estratégico</h2>
+        <span class="badge">${m.sub}</span>
+      </div>
+      <div class="map-area" id="a-${m.id}">
+        <svg class="map-svg" id="svg-${m.id}" viewBox="0 0 900 480" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="det-panel" id="d-${m.id}">
+        <span class="det-icon">${m.icon}</span>
+        <div class="det-body"><h4>${m.name} — Vista General</h4><p>${cN.det}</p></div>
+      </div>
+      <div class="hint">💡 Haz clic en cada nodo para explorar sus detalles</div>
+    </div>`;
+  mainEl.appendChild(sec);
+
+  const svg=document.getElementById('svg-'+m.id);
+  const area=document.getElementById('a-'+m.id);
+  const det=document.getElementById('d-'+m.id);
+
+  m.conns.forEach(([a,b])=>{
+    const na=m.nodes.find(n=>n.id===a),nb=m.nodes.find(n=>n.id===b);
+    const el=document.createElementNS('http://www.w3.org/2000/svg','line');
+    el.setAttribute('x1',na.x);el.setAttribute('y1',na.y);
+    el.setAttribute('x2',nb.x);el.setAttribute('y2',nb.y);
+    el.setAttribute('stroke',m.color);el.setAttribute('stroke-width','2.5');el.setAttribute('stroke-opacity','0.3');
+    svg.appendChild(el);
+  });
+
+  m.nodes.forEach(n=>{
+    const isCx=n.cx,w=isCx?128:136;
+    const lp=(n.x/900*100),tp=(n.y/480*100);
+    const div=document.createElement('div');
+    div.className='node'+(isCx?' central':'');
+    div.style.cssText=`left:calc(${lp}% - ${w/2}px);top:calc(${tp}% - ${isCx?64:38}px);width:${w}px;${isCx?`height:${w}px;`:''}background:${isCx?m.color:hexRgba(m.color,0.82)};box-shadow:0 4px 14px ${hexRgba(m.color,0.28)};`;
+    div.innerHTML=`<span class="ni">${n.icon}</span><span class="nt">${n.lbl.replace(/\n/g,'<br>')}</span>${n.sub?`<span class="ns">${n.sub}</span>`:''}`;
+    div.onclick=()=>{
+      document.querySelectorAll(`#a-${m.id} .node`).forEach(e=>e.classList.remove('sel'));
+      div.classList.add('sel');
+      det.innerHTML=`<span class="det-icon">${n.icon}</span><div class="det-body"><h4>${n.lbl.replace(/\n/g,' ')}</h4><p>${n.det}</p></div>`;
+    };
+    area.appendChild(div);
+  });
+});
+
+const compBtn=document.createElement('button');
+compBtn.className='tab-btn';
+compBtn.style.setProperty('--c','#B7791F');
+compBtn.innerHTML=`<span class="ts">📊 Comparativo</span><span class="tt">Tres municipios</span>`;
+let chartMade=false;
+compBtn.onclick=()=>{
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  compBtn.classList.add('active');
+  document.getElementById('s-comp').classList.add('active');
+  if(!chartMade){buildRadar();chartMade=true;}
+};
+tabsEl.appendChild(compBtn);
+
+const compSec=document.createElement('div');
+compSec.className='sec';
+compSec.id='s-comp';
+compSec.innerHTML=`
+  <div class="comp-sec">
+    <div class="comp-block">
+      <div class="comp-hdr">
+        <h2>📡 Análisis Comparativo — Capacidades Económicas</h2>
+        <p>Evaluación relativa en 6 dimensiones clave · Escala 1–10 basada en análisis cualitativo del PMD y datos sectoriales</p>
+      </div>
+      <div class="radar-wrap"><canvas id="radarC" width="500" height="360"></canvas></div>
+    </div>
+    <div class="comp-block">
+      <div class="comp-hdr">
+        <h2>📋 Perfiles Municipales — Indicadores Comparativos</h2>
+        <p>Comparación estructural: economía, retos, instrumentos PMD y fortalezas</p>
+      </div>
+      <div class="cards-grid" id="cgrid"></div>
+    </div>
+    <div class="comp-block">
+      <div class="comp-hdr">
+        <h2>🔁 Convergencias y Divergencias en los PMDs</h2>
+        <p>Elementos comunes y diferenciadores en los tres Planes Municipales de Desarrollo 2022–2025</p>
+      </div>
+      <div class="conv-grid" id="cvgrid"></div>
+    </div>
+  </div>`;
+mainEl.appendChild(compSec);
+
+const cg=document.getElementById('cgrid');
+COMP.cards.forEach(c=>{
+  const card=document.createElement('div');
+  card.className='muni-card';
+  card.style.setProperty('--c',c.color);
+  card.innerHTML=`
+    <div class="mc-head" style="background:${c.color}">
+      <span class="mc-ico">${c.icon}</span>
+      <div><h3>${c.mun}</h3><div class="mc-tipo">${c.tipo}</div></div>
+    </div>
+    <div class="mc-body">
+      ${c.rows.map(r=>`<div class="mc-row${r.hl?' hl':''}"><div class="mc-lbl">${r.l}</div><div class="mc-val">${r.v}</div></div>`).join('')}
+    </div>`;
+  cg.appendChild(card);
+});
+
+const cvg=document.getElementById('cvgrid');
+COMP.conv.forEach(cv=>{
+  const d=document.createElement('div');
+  d.className='conv-item';
+  d.style.setProperty('--lc',cv.color);
+  d.innerHTML=`<h4>${cv.title}</h4><p>${cv.text}</p>`;
+  cvg.appendChild(d);
+});
+
+function buildRadar(){
+  const ctx=document.getElementById('radarC').getContext('2d');
+  new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:COMP.radar.labels,
+      datasets:COMP.radar.ds.map(d=>({
+        label:d.lbl,data:d.data,
+        borderColor:d.color,
+        backgroundColor:hexRgba(d.color,0.1),
+        borderWidth:2.5,
+        pointBackgroundColor:d.color,
+        pointRadius:4,pointHoverRadius:6
+      }))
+    },
+    options:{
+      responsive:false,
+      scales:{r:{
+        beginAtZero:true,max:10,
+        ticks:{stepSize:2,font:{size:10},color:'#718096',backdropColor:'transparent'},
+        grid:{color:'rgba(0,0,0,0.07)'},
+        pointLabels:{font:{size:10.5,weight:'600'},color:'#4A5568'},
+        angleLines:{color:'rgba(0,0,0,0.07)'}
+      }},
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:12},padding:16,usePointStyle:true}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}/10`}}
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
