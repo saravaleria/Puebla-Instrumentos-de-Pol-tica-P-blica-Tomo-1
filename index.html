@@ -1,53 +1,46 @@
----
-
-title: Inicio
-
----
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Índice de mis páginas</title>
+<title>Index</title>
 <style>
-
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
-
-        h1 { color: #24292e; border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; }
-
-        ul { list-style: none; padding: 0; }
-
-        li { margin: 12px 0; padding: 10px; border: 1px solid #e1e4e8; border-radius: 6px; }
-
-        li:hover { background-color: #f6f8fa; }
-
-        a { color: #0366d6; text-decoration: none; font-weight: bold; display: block; }
-
-        a:hover { color: #024288; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+ 
+        h1 {
+            margin-bottom: 20px;
+        }
+ 
+        ul {
+            padding-left: 20px;
+        }
+ 
+        li {
+            margin: 8px 0;
+        }
+ 
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+ 
+        a:hover {
+            text-decoration: underline;
+        }
 </style>
 </head>
 <body>
  
-    <h1>Mis Páginas Disponibles</h1>
+<h1>Available Pages</h1>
+ 
 <ul>
-
-        {% for page in site.pages %}
-<!-- Filtra para mostrar solo archivos .html de la raíz y descartar el propio index o archivos ocultos -->
-
-            {% if page.url contains '.html' and page.url != '/index.html' and page.url != '/404.html' %}
-<li>
-<a href="{{ page.url | relative_url }}">
-
-                        {{ page.name | remove: ".html" | replace: "-", " " | replace: "_", " " | capitalize }}
-</a>
-</li>
-
-            {% endif %}
-
-        {% endfor %}
+<li><a href="mapas_municipios_puebla.html">mapas_municipios_puebla.html</a></li>
 </ul>
  
 </body>
 </html>
-
- 
